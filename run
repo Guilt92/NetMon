@@ -22,6 +22,12 @@ fetch_versions() {
     PROMETHEUS_VERSION=$(curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | jq -r .tag_name | sed 's/^v//')
     NODE_EXPORTER_VERSION=$(curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | jq -r .tag_name | sed 's/^v//')
     GRAFANA_VERSION=$(curl -s https://api.github.com/repos/grafana/grafana/releases/latest | jq -r .tag_name | sed 's/^v//')
+
+    if [[ -z $PROMETHEUS_VERSION || -z $NODE_EXPORTER_VERSION || -z $GRAFANA_VERSION ]]; then
+        echo -e "${RED}[ERROR]${ENDCOLOR} Failed to fetch versions. Please check your internet connection."
+        exit 1
+    fi
+
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Fetched latest versions:"
     echo -e "  Prometheus: ${CYAN}$PROMETHEUS_VERSION${ENDCOLOR}"
     echo -e "  Node Exporter: ${CYAN}$NODE_EXPORTER_VERSION${ENDCOLOR}"
@@ -138,62 +144,60 @@ EOF
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Dashboard added."
 }
 
+uninstall() {
+    echo -e "${RED}[INFO]${ENDCOLOR} ${CYAN}Uninstalling all components...${ENDCOLOR}"
+    systemctl stop grafana-server
+    systemctl disable grafana-server
+    apt remove -y grafana
+    pkill prometheus
+    pkill node_exporter
+    rm -rf $INSTALL_DIR
+    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Uninstallation complete."
+}
+
 if [ "$(id -u)" -ne 0 ]; then
     echo -e "${RED}[ERROR]${ENDCOLOR} Please run this script as root."
     exit 1
 fi
 
-
 install_fn(){
-fetch_versions
-setup_prerequisites
-install_prometheus
-install_node_exporter
-install_grafana
-configure_grafana
-add_dashboard
+    fetch_versions
+    setup_prerequisites
+    install_prometheus
+    install_node_exporter
+    install_grafana
+    configure_grafana
+    add_dashboard
 }
 
 information(){
-echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Monitoring system successfully deployed."
-echo -e "${YELLOW}Access Grafana at: ${CYAN}http://localhost:3000${ENDCOLOR}"
-echo -e "${YELLOW}Username: ${CYAN}$GRAFANA_ADMIN_USER${ENDCOLOR}"
-echo -e "${YELLOW}Password: ${CYAN}$GRAFANA_ADMIN_PASS${ENDCOLOR}"
-
+    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Monitoring system successfully deployed."
+    echo -e "${YELLOW}Access Grafana at: ${CYAN}http://localhost:3000${ENDCOLOR}"
+    echo -e "${YELLOW}Username: ${CYAN}$GRAFANA_ADMIN_USER${ENDCOLOR}"
+    echo -e "${YELLOW}Password: ${CYAN}$GRAFANA_ADMIN_PASS${ENDCOLOR}"
 }
-
-
-unitstall(){
-echo "unitstall"
-}
-
 
 while true; do
-    
     clear
-    echo " "
-    echo " "
     echo -e "${BLUE}\e[5m╔═══════════════════════════════════════════════════════════╗${ENDCOLOR}"
-    echo -e "                    ${GREEN} 🔥 NFTables Manager 🔥   ${ENDCOLOR}"
-    echo -e "              ${CYAN} https://github.com/Niihil/Ytiruces/  ${ENDCOLOR}"
+    echo -e "                    ${GREEN}🔥 Monitoring System Manager 🔥${ENDCOLOR}"
+    echo -e "              ${CYAN} https://github.com/your-repo-link ${ENDCOLOR}"
     echo -e "${BLUE}\e[5m╚═══════════════════════════════════════════════════════════╝${ENDCOLOR}"
-    echo " "
-    echo -e  "${RED}============================ ${ENDCOLOR}"
-    echo -e "" 
+    echo -e "${RED}============================ ${ENDCOLOR}"
     echo -e "${RED}1. ${ENDCOLOR} Install ${ENDCOLOR}"
-    echo -e "${RED}2. ${ENDCOLOR} Unitstall ${ENDCOLOR}"
-    echo -e "${RED}3. ${ENDCOLOR} Exiting ${ENDCOLOR}"
-    echo -e " "
-    echo -e  "${RED}============================ ${ENDCOLOR}" 
-    echo -e " "
+    echo -e "${RED}2. ${ENDCOLOR} Uninstall ${ENDCOLOR}"
+    echo -e "${RED}3. ${ENDCOLOR} Exit ${ENDCOLOR}"
+    echo -e "${RED}============================ ${ENDCOLOR}"
+    
     read -p "$(echo -e "${BLUE}Please enter your choice: ${ENDCOLOR}")" choice
     case $choice in
-        1)  install_fn; sleep 1 ; information ;sleep 5 ; continue ;;
-        2)  Unitstall ; sleep 1; continue ;;        
+        1) install_fn; sleep 1; information; sleep 5; continue ;;
+        2) uninstall; sleep 1; continue ;;
         3) sleep 1; clear; echo "Exiting..."; exit ;;
         *) echo -e "${RED}Invalid option, please try again.${ENDCOLOR}" ;;
     esac
-
     sleep 1
 done
+
+
 
