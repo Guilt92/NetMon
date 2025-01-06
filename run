@@ -177,17 +177,6 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 
-
-install_fn(){
-    setup_prerequisites
-    fetch_versions
-    install_prometheus
-    install_node_exporter
-    install_grafana
-    configure_grafana
-    add_dashboard
-}
-
 information(){
     clear 
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Monitoring system successfully deployed."
@@ -198,6 +187,17 @@ information(){
     echo -e "${BLUE}[INFO]${ENDCOLOR} ${CYAN}Visit Node Exporter metrics at: http://$(hostname -I | awk '{print $1}'):9100/metrics${ENDCOLOR}"
 
 }
+
+ install_fn(){
+    setup_prerequisites
+    fetch_versions
+    install_prometheus
+    install_node_exporter
+    install_grafana
+    configure_grafana
+    add_dashboard
+ }
+
 
 while true; do
     clear
