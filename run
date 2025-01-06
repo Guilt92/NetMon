@@ -126,12 +126,10 @@ add_dashboard() {
     echo -e "${BLUE}[INFO]${ENDCOLOR} ${PURPLE}Adding Dashboard to Grafana...${ENDCOLOR}"
 
     mkdir -p /var/lib/grafana/dashboards/
-    cp ./Dashboards-*.json /var/lib/grafana/dashboards/
-
-    if [ ! -d /etc/grafana/provisioning/dashboards ]; then
-        mkdir -p /etc/grafana/provisioning/dashboards
-    fi
-
+    cp Dashboards-1.json /var/lib/grafana/dashboards/
+    cp Dashboards-2.json /var/lib/grafana/dashboards/
+    mkdir -p /etc/grafana/provisioning/dashboards
+    
     cat <<EOF > /etc/grafana/provisioning/dashboards/dashboards.yaml
 apiVersion: 1
 providers:
