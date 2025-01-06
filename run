@@ -148,19 +148,37 @@ EOF
 
 uninstall() {
     echo -e "${RED}[INFO]${ENDCOLOR} ${CYAN}Uninstalling all components...${ENDCOLOR}"
-    systemctl stop grafana-server
-    systemctl disable grafana-server
-    apt remove -y grafana
-    pkill prometheus
-    pkill node_exporter
-    rm -rf $INSTALL_DIR
-    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Uninstallation complete."
+
+    echo -e "${BLUE}[INFO]${ENDCOLOR} Stopping Grafana service..."
+    systemctl stop grafana-server 2>/dev/null || true
+    systemctl disable grafana-server 2>/dev/null || true
+    apt remove --purge -y grafana 2>/dev/null || true
+    rm -rf /var/lib/grafana /etc/grafana /usr/share/grafana 2>/dev/null || true
+
+    echo -e "${BLUE}[INFO]${ENDCOLOR} Stopping Prometheus..."
+    pkill prometheus 2>/dev/null || true
+    rm -rf $INSTALL_DIR/prometheus 2>/dev/null || true
+
+    echo -e "${BLUE}[INFO]${ENDCOLOR} Stopping Node Exporter..."
+    pkill node_exporter 2>/dev/null || true
+    rm -rf $INSTALL_DIR/node_exporter 2>/dev/null || true
+
+    echo -e "${BLUE}[INFO]${ENDCOLOR} Removing installation directory..."
+    rm -rf $INSTALL_DIR 2>/dev/null || true
+
+    echo -e "${BLUE}[INFO]${ENDCOLOR} Cleaning up additional files..."
+    rm -f /etc/apt/sources.list.d/grafana.list 2>/dev/null || true
+    rm -f /etc/apt/trusted.gpg.d/grafana.asc 2>/dev/null || true
+
+    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Uninstallation complete. All components have been removed."
 }
 
 if [ "$(id -u)" -ne 0 ]; then
     echo -e "${RED}[ERROR]${ENDCOLOR} Please run this script as root."
     exit 1
 fi
+
+
 
 install_fn(){
     setup_prerequisites
@@ -173,10 +191,14 @@ install_fn(){
 }
 
 information(){
+    clear 
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Monitoring system successfully deployed."
     echo -e "${YELLOW}Access Grafana at: ${CYAN}http://$(hostname -I | awk '{print $1}'):3000${ENDCOLOR}"
     echo -e "${YELLOW}Username: ${CYAN}$GRAFANA_ADMIN_USER${ENDCOLOR}"
     echo -e "${YELLOW}Password: ${CYAN}$GRAFANA_ADMIN_PASS${ENDCOLOR}"
+    echo -e "${BLUE}[INFO]${ENDCOLOR} ${CYAN}Visit Prometheus at: http://$(hostname -I | awk '{print $1}'):9090${ENDCOLOR}"
+    echo -e "${BLUE}[INFO]${ENDCOLOR} ${CYAN}Visit Node Exporter metrics at: http://$(hostname -I | awk '{print $1}'):9100/metrics${ENDCOLOR}"
+
 }
 
 while true; do
@@ -194,8 +216,8 @@ while true; do
     read -p "$(echo -e "${BLUE}Please enter your choice: ${ENDCOLOR}")" choice
     case $choice in
         1) install_fn; sleep 1; information; sleep 5; exit ;;
-        2) uninstall; sleep 1; continue ;;
-        3) sleep 1; clear; echo "Exiting..."; exit ;;
+        2) uninstall; break ;;
+        3) echo -e "${GREEN}Exiting...${ENDCOLOR}"; exit ;;
         *) echo -e "${RED}Invalid option, please try again.${ENDCOLOR}" ;;
     esac
     sleep 1
