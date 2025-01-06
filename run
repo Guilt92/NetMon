@@ -31,7 +31,7 @@ GRAFANA_ADMIN_USER="admin"
 GRAFANA_ADMIN_PASS="admin"
 
 fetch_versions() {
-    PROMETHEUS_VERSION=$(curl -s https://github.com/prometheus/prometheus/releases | grep -oP 'v\d+\.\d+\.\d+' | head -n 1 )
+    PROMETHEUS_VERSION=$(curl -s https://github.com/prometheus/prometheus/releases | grep -oP 'v\d+\.\d+\.\d+' | head -n 1 | sed 's/^v//')
     NODE_EXPORTER_VERSION=$(curl -s https://github.com/prometheus/node_exporter/releases | grep -oP 'v\d+\.\d+\.\d+' | head -n 1 | sed 's/^v//' )
     GRAFANA_VERSION=$(curl -s https://api.github.com/repos/grafana/grafana/releases/latest | jq -r .tag_name | sed 's/^v//')
 
