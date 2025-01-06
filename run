@@ -13,6 +13,18 @@ MAGENTA=$(echo -ne '\e[35m')
 PURPLE=$(echo -ne '\e[38;5;129m')
 WHITE=$(echo -ne '\e[97m')
 
+check_user_root(){
+    if [ "$EUID" -ne 0 ]; then 
+        echo -e ""
+        echo -e "${RED}This script must be run as root. Please switch to the root user and try again.${ENDCOLOR}"
+        exit 1
+    fi
+}
+clear
+check_user_root
+sleep 1;
+
+
 INSTALL_DIR="/opt/monitoring"
 DASHBOARD_JSON="dashboard.json"
 GRAFANA_ADMIN_USER="admin"
@@ -36,7 +48,7 @@ fetch_versions() {
 
 setup_prerequisites() {
     echo -e "${BLUE}[INFO]${ENDCOLOR} ${CYAN}Updating system and installing prerequisites...${ENDCOLOR}"
-    apt update && apt upgrade -y
+    apt update -y
     apt install -y wget tar unzip apt-transport-https software-properties-common curl jq
 }
 
