@@ -44,6 +44,11 @@ fetch_versions() {
     echo -e "  Prometheus: ${CYAN}$PROMETHEUS_VERSION${ENDCOLOR}"
     echo -e "  Node Exporter: ${CYAN}$NODE_EXPORTER_VERSION${ENDCOLOR}"
     echo -e "  Grafana: ${CYAN}$GRAFANA_VERSION${ENDCOLOR}"
+    
+    export  PROMETHEUS_VERSION
+    export NODE_EXPORTER_VERSION
+    export GRAFANA_VERSION
+
 }
 
 setup_prerequisites() {
