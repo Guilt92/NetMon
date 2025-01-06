@@ -121,58 +121,28 @@ configure_grafana() {
 
   echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Data Source added."
 }
-
-
-
+    
 add_dashboard() {
     echo -e "${BLUE}[INFO]${ENDCOLOR} ${PURPLE}Adding Dashboard to Grafana...${ENDCOLOR}"
-    cat <<EOF > $DASHBOARD_JSON
-{
-  "dashboard": {
-    "id": null,
-    "uid": null,
-    "title": "Network Monitoring",
-    "tags": ["network", "monitoring"],
-    "timezone": "browser",
-    "schemaVersion": 16,
-    "version": 0,
-    "refresh": "5s",
-    "panels": [
-      {
-        "type": "graph",
-        "title": "Download Rate",
-        "targets": [
-          {
-            "expr": "rate(node_network_receive_bytes_total[5m])",
-            "interval": "",
-            "legendFormat": "{{instance}}",
-            "refId": "A"
-          }
-        ],
-        "datasource": "Prometheus",
-        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 }
-      },
-      {
-        "type": "graph",
-        "title": "Upload Rate",
-        "targets": [
-          {
-            "expr": "rate(node_network_transmit_bytes_total[5m])",
-            "interval": "",
-            "legendFormat": "{{instance}}",
-            "refId": "A"
-          }
-        ],
-        "datasource": "Prometheus",
-        "gridPos": { "x": 0, "y": 9, "w": 12, "h": 8 }
-      }
-    ]
-  },
-  "overwrite": true
-}
+
+    mkdir -p /var/lib/grafana/dashboards/
+    cp ./Dashboards-*.json /var/lib/grafana/dashboards/
+
+    if [ ! -d /etc/grafana/provisioning/dashboards ]; then
+        mkdir -p /etc/grafana/provisioning/dashboards
+    fi
+
+    cat <<EOF > /etc/grafana/provisioning/dashboards/dashboards.yaml
+apiVersion: 1
+providers:
+  - name: 'default'
+    orgId: 1
+    folder: ''
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards
 EOF
-    GRAFANA_URL="http://$(hostname -I | awk '{print $1}'):3000"
-    curl -u $GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASS -X POST $GRAFANA_URL/api/dashboards/db -H "Content-Type: application/json" -d @$DASHBOARD_JSON
+
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Dashboard added."
 }
 
