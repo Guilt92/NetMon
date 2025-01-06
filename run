@@ -1,0 +1,199 @@
+#!/bin/bash
+
+set -e
+
+ORANGE=$(echo -ne '\e[38;5;214m')
+BLUE=$(echo -ne '\e[94m')
+RED=$(echo -ne '\e[31m')
+GREEN=$(echo -ne '\e[32m')
+ENDCOLOR=$(echo -ne '\e[0m')
+YELLOW=$(echo -ne '\033[0;33m')
+CYAN=$(echo -ne '\e[36m')
+MAGENTA=$(echo -ne '\e[35m')
+PURPLE=$(echo -ne '\e[38;5;129m')
+WHITE=$(echo -ne '\e[97m')
+
+INSTALL_DIR="/opt/monitoring"
+DASHBOARD_JSON="dashboard.json"
+GRAFANA_ADMIN_USER="admin"
+GRAFANA_ADMIN_PASS="admin"
+
+fetch_versions() {
+    PROMETHEUS_VERSION=$(curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | jq -r .tag_name | sed 's/^v//')
+    NODE_EXPORTER_VERSION=$(curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | jq -r .tag_name | sed 's/^v//')
+    GRAFANA_VERSION=$(curl -s https://api.github.com/repos/grafana/grafana/releases/latest | jq -r .tag_name | sed 's/^v//')
+    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Fetched latest versions:"
+    echo -e "  Prometheus: ${CYAN}$PROMETHEUS_VERSION${ENDCOLOR}"
+    echo -e "  Node Exporter: ${CYAN}$NODE_EXPORTER_VERSION${ENDCOLOR}"
+    echo -e "  Grafana: ${CYAN}$GRAFANA_VERSION${ENDCOLOR}"
+}
+
+setup_prerequisites() {
+    echo -e "${BLUE}[INFO]${ENDCOLOR} ${CYAN}Updating system and installing prerequisites...${ENDCOLOR}"
+    apt update && apt upgrade -y
+    apt install -y wget tar unzip apt-transport-https software-properties-common curl jq
+}
+
+install_prometheus() {
+    echo -e "${BLUE}[INFO]${ENDCOLOR} ${MAGENTA}Installing Prometheus...${ENDCOLOR}"
+    mkdir -p $INSTALL_DIR/prometheus
+    cd $INSTALL_DIR/prometheus
+    wget https://github.com/prometheus/prometheus/releases/download/v$PROMETHEUS_VERSION/prometheus-$PROMETHEUS_VERSION.linux-amd64.tar.gz
+    tar xvfz prometheus-$PROMETHEUS_VERSION.linux-amd64.tar.gz --strip-components=1
+    cat <<EOL > prometheus.yml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+EOL
+    nohup ./prometheus --config.file=prometheus.yml --storage.tsdb.path="$INSTALL_DIR/prometheus/data" &
+    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Prometheus installed."
+}
+
+install_node_exporter() {
+    echo -e "${BLUE}[INFO]${ENDCOLOR} ${ORANGE}Installing Node Exporter...${ENDCOLOR}"
+    mkdir -p $INSTALL_DIR/node_exporter
+    cd $INSTALL_DIR/node_exporter
+    wget https://github.com/prometheus/node_exporter/releases/download/v$NODE_EXPORTER_VERSION/node_exporter-$NODE_EXPORTER_VERSION.linux-amd64.tar.gz
+    tar xvfz node_exporter-$NODE_EXPORTER_VERSION.linux-amd64.tar.gz --strip-components=1
+    nohup ./node_exporter &
+    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Node Exporter installed."
+}
+
+install_grafana() {
+    echo -e "${BLUE}[INFO]${ENDCOLOR} ${YELLOW}Installing Grafana...${ENDCOLOR}"
+    wget -q -O - https://packages.grafana.com/gpg.key | apt-key add -
+    add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
+    apt update && apt install -y grafana
+    systemctl start grafana-server
+    systemctl enable grafana-server
+    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Grafana installed."
+}
+
+configure_grafana() {
+    echo -e "${BLUE}[INFO]${ENDCOLOR} ${CYAN}Adding Data Source to Grafana...${ENDCOLOR}"
+    GRAFANA_URL="http://localhost:3000"
+    curl -u $GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASS -X POST $GRAFANA_URL/api/datasources -H "Content-Type: application/json" -d '{
+      "name": "Prometheus",
+      "type": "prometheus",
+      "url": "http://localhost:9090",
+      "access": "proxy",
+      "isDefault": true
+    }'
+    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Data Source added."
+}
+
+add_dashboard() {
+    echo -e "${BLUE}[INFO]${ENDCOLOR} ${PURPLE}Adding Dashboard to Grafana...${ENDCOLOR}"
+    cat <<EOF > $DASHBOARD_JSON
+{
+  "dashboard": {
+    "id": null,
+    "uid": null,
+    "title": "Network Monitoring",
+    "tags": ["network", "monitoring"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "5s",
+    "panels": [
+      {
+        "type": "graph",
+        "title": "Download Rate",
+        "targets": [
+          {
+            "expr": "rate(node_network_receive_bytes_total[5m])",
+            "interval": "",
+            "legendFormat": "{{instance}}",
+            "refId": "A"
+          }
+        ],
+        "datasource": "Prometheus",
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 }
+      },
+      {
+        "type": "graph",
+        "title": "Upload Rate",
+        "targets": [
+          {
+            "expr": "rate(node_network_transmit_bytes_total[5m])",
+            "interval": "",
+            "legendFormat": "{{instance}}",
+            "refId": "A"
+          }
+        ],
+        "datasource": "Prometheus",
+        "gridPos": { "x": 0, "y": 9, "w": 12, "h": 8 }
+      }
+    ]
+  },
+  "overwrite": true
+}
+EOF
+    GRAFANA_URL="http://localhost:3000"
+    curl -u $GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASS -X POST $GRAFANA_URL/api/dashboards/db -H "Content-Type: application/json" -d @$DASHBOARD_JSON
+    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Dashboard added."
+}
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo -e "${RED}[ERROR]${ENDCOLOR} Please run this script as root."
+    exit 1
+fi
+
+
+install_fn(){
+fetch_versions
+setup_prerequisites
+install_prometheus
+install_node_exporter
+install_grafana
+configure_grafana
+add_dashboard
+}
+
+information(){
+echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Monitoring system successfully deployed."
+echo -e "${YELLOW}Access Grafana at: ${CYAN}http://localhost:3000${ENDCOLOR}"
+echo -e "${YELLOW}Username: ${CYAN}$GRAFANA_ADMIN_USER${ENDCOLOR}"
+echo -e "${YELLOW}Password: ${CYAN}$GRAFANA_ADMIN_PASS${ENDCOLOR}"
+
+}
+
+
+unitstall(){
+echo "unitstall"
+}
+
+
+while true; do
+    
+    clear
+    echo " "
+    echo " "
+    echo -e "${BLUE}\e[5m╔═══════════════════════════════════════════════════════════╗${ENDCOLOR}"
+    echo -e "                    ${GREEN} 🔥 NFTables Manager 🔥   ${ENDCOLOR}"
+    echo -e "              ${CYAN} https://github.com/Niihil/Ytiruces/  ${ENDCOLOR}"
+    echo -e "${BLUE}\e[5m╚═══════════════════════════════════════════════════════════╝${ENDCOLOR}"
+    echo " "
+    echo -e  "${RED}============================ ${ENDCOLOR}"
+    echo -e "" 
+    echo -e "${RED}1. ${ENDCOLOR} Install ${ENDCOLOR}"
+    echo -e "${RED}2. ${ENDCOLOR} Unitstall ${ENDCOLOR}"
+    echo -e "${RED}3. ${ENDCOLOR} Exiting ${ENDCOLOR}"
+    echo -e " "
+    echo -e  "${RED}============================ ${ENDCOLOR}" 
+    echo -e " "
+    read -p "$(echo -e "${BLUE}Please enter your choice: ${ENDCOLOR}")" choice
+    case $choice in
+        1)  install_fn; sleep 1 ; information ;sleep 5 ; continue ;;
+        2)  Unitstall ; sleep 1; continue ;;        
+        3) sleep 1; clear; echo "Exiting..."; exit ;;
+        *) echo -e "${RED}Invalid option, please try again.${ENDCOLOR}" ;;
+    esac
+
+    sleep 1
+done
+
