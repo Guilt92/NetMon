@@ -81,11 +81,11 @@ install_grafana() {
 
 configure_grafana() {
     echo -e "${BLUE}[INFO]${ENDCOLOR} ${CYAN}Adding Data Source to Grafana...${ENDCOLOR}"
-    GRAFANA_URL="http://localhost:3000"
+    GRAFANA_URL="http://$(hostname -I | awk '{print $1}'):3000"
     curl -u $GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASS -X POST $GRAFANA_URL/api/datasources -H "Content-Type: application/json" -d '{
       "name": "Prometheus",
       "type": "prometheus",
-      "url": "http://localhost:9090",
+      "url": "http://$(hostname -I | awk '\''{print $1}'\''):9090",
       "access": "proxy",
       "isDefault": true
     }'
@@ -139,7 +139,7 @@ add_dashboard() {
   "overwrite": true
 }
 EOF
-    GRAFANA_URL="http://localhost:3000"
+    GRAFANA_URL="http://$(hostname -I | awk '{print $1}'):3000"
     curl -u $GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASS -X POST $GRAFANA_URL/api/dashboards/db -H "Content-Type: application/json" -d @$DASHBOARD_JSON
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Dashboard added."
 }
@@ -161,8 +161,8 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 install_fn(){
-    fetch_versions
     setup_prerequisites
+    fetch_versions
     install_prometheus
     install_node_exporter
     install_grafana
@@ -172,7 +172,7 @@ install_fn(){
 
 information(){
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Monitoring system successfully deployed."
-    echo -e "${YELLOW}Access Grafana at: ${CYAN}http://localhost:3000${ENDCOLOR}"
+    echo -e "${YELLOW}Access Grafana at: ${CYAN}http://$(hostname -I | awk '{print $1}'):3000${ENDCOLOR}"
     echo -e "${YELLOW}Username: ${CYAN}$GRAFANA_ADMIN_USER${ENDCOLOR}"
     echo -e "${YELLOW}Password: ${CYAN}$GRAFANA_ADMIN_PASS${ENDCOLOR}"
 }
@@ -180,8 +180,8 @@ information(){
 while true; do
     clear
     echo -e "${BLUE}\e[5m╔═══════════════════════════════════════════════════════════╗${ENDCOLOR}"
-    echo -e "                    ${GREEN}🔥 Monitoring System Manager 🔥${ENDCOLOR}"
-    echo -e "              ${CYAN} https://github.com/your-repo-link ${ENDCOLOR}"
+    echo -e "                    ${GREEN}🔥 Network Monitoring 🔥${ENDCOLOR}"
+    echo -e "              ${CYAN} https://github.com/Niihil/NetMon.git  ${ENDCOLOR}"
     echo -e "${BLUE}\e[5m╚═══════════════════════════════════════════════════════════╝${ENDCOLOR}"
     echo -e "${RED}============================ ${ENDCOLOR}"
     echo -e "${RED}1. ${ENDCOLOR} Install ${ENDCOLOR}"
@@ -191,7 +191,7 @@ while true; do
     
     read -p "$(echo -e "${BLUE}Please enter your choice: ${ENDCOLOR}")" choice
     case $choice in
-        1) install_fn; sleep 1; information; sleep 5; continue ;;
+        1) install_fn; sleep 1; information; sleep 5; exit ;;
         2) uninstall; sleep 1; continue ;;
         3) sleep 1; clear; echo "Exiting..."; exit ;;
         *) echo -e "${RED}Invalid option, please try again.${ENDCOLOR}" ;;
