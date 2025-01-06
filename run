@@ -88,11 +88,12 @@ echo -e "nameserver 185.51.200.2\nnameserver 178.22.122.100" | sudo tee -a /etc/
 install_grafana() {
     nameserver_dns
     echo -e "${BLUE}[INFO]${ENDCOLOR} ${YELLOW}Installing Grafana...${ENDCOLOR}"
-    wget -q -O - https://packages.grafana.com/gpg.key | apt-key add -
-    add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
-    apt update && apt install -y grafana
-    systemctl start grafana-server
-    systemctl enable grafana-server
+    curl https://packages.grafana.com/gpg.key | sudo tee /etc/apt/trusted.gpg.d/grafana.asc
+    echo "deb https://packages.grafana.com/oss/deb stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+    sudo apt update
+    sudo apt install -y grafana
+    sudo systemctl start grafana-server
+    sudo systemctl enable grafana-server
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Grafana installed."
 }
 
