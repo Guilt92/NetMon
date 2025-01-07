@@ -137,9 +137,8 @@ add_dashboard() {
     curl -fSL "$FILE2_URL" -o "$DEST_DIR/Dashboards-2.json" && \
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Dashboards-2.json downloaded." || \
     { echo -e "${RED}[ERROR]${ENDCOLOR} Failed to download Dashboards-2.json."; exit 1; }
-        
-
-    cp "$SCRIPT_DIR/Dashboards-2.json" /var/lib/grafana/dashboards/
+    
+    chown  -R grafana. "$DEST_DIR"        
 
     mkdir -p /etc/grafana/provisioning/dashboards
 
