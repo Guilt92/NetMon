@@ -126,17 +126,20 @@ configure_grafana() {
 add_dashboard() {
     echo -e "${BLUE}[INFO]${ENDCOLOR} ${PURPLE}Adding Dashboard to Grafana...${ENDCOLOR}"
     mkdir -p /var/lib/grafana/dashboards/
+    DEST_DIR="/var/lib/grafana/dashboards/"
+    
+    FILE1_URL="https://raw.githubusercontent.com/Niihil/NetMon/main/Dashboards-1.json"
+    FILE2_URL="https://raw.githubusercontent.com/Niihil/NetMon/main/Dashboards-2.json"
+    curl -fSL "$FILE1_URL" -o "$DEST_DIR/Dashboards-1.json" && \
+    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Dashboards-1.json downloaded." || \
+    { echo -e "${RED}[ERROR]${ENDCOLOR} Failed to download Dashboards-1.json."; exit 1; }
 
-    SCRIPT_DIR=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
-    echo "Script directory: $SCRIPT_DIR"
+    curl -fSL "$FILE2_URL" -o "$DEST_DIR/Dashboards-2.json" && \
+    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Dashboards-2.json downloaded." || \
+    { echo -e "${RED}[ERROR]${ENDCOLOR} Failed to download Dashboards-2.json."; exit 1; }
+        
 
-    if [ -f "$SCRIPT_DIR/Dashboards-1.json" ] && [ -f "$SCRIPT_DIR/Dashboards-2.json" ]; then
-        cp "$SCRIPT_DIR/Dashboards-1.json" /var/lib/grafana/dashboards/
-        cp "$SCRIPT_DIR/Dashboards-2.json" /var/lib/grafana/dashboards/
-    else
-        echo -e "${RED}[ERROR]${ENDCOLOR} Dashboard files not found in $SCRIPT_DIR."
-        exit 1
-    fi
+    cp "$SCRIPT_DIR/Dashboards-2.json" /var/lib/grafana/dashboards/
 
     mkdir -p /etc/grafana/provisioning/dashboards
 
