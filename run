@@ -122,20 +122,24 @@ configure_grafana() {
   echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Data Source added."
 }
     
+
 add_dashboard() {
     echo -e "${BLUE}[INFO]${ENDCOLOR} ${PURPLE}Adding Dashboard to Grafana...${ENDCOLOR}"
     mkdir -p /var/lib/grafana/dashboards/
-    CURRENT_DIR=$(pwd)
-    echo "Current directory: $CURRENT_DIR"
-    if [ -f "$CURRENT_DIR/Dashboards-1.json" ] && [ -f "$CURRENT_DIR/Dashboards-2.json" ]; then
-        cp "$CURRENT_DIR/Dashboards-1.json" /var/lib/grafana/dashboards/
-        cp "$CURRENT_DIR/Dashboards-2.json" /var/lib/grafana/dashboards/
+
+    SCRIPT_DIR=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
+    echo "Script directory: $SCRIPT_DIR"
+
+    if [ -f "$SCRIPT_DIR/Dashboards-1.json" ] && [ -f "$SCRIPT_DIR/Dashboards-2.json" ]; then
+        cp "$SCRIPT_DIR/Dashboards-1.json" /var/lib/grafana/dashboards/
+        cp "$SCRIPT_DIR/Dashboards-2.json" /var/lib/grafana/dashboards/
     else
-        echo -e "${RED}[ERROR]${ENDCOLOR} Dashboard files not found in $CURRENT_DIR."
+        echo -e "${RED}[ERROR]${ENDCOLOR} Dashboard files not found in $SCRIPT_DIR."
         exit 1
     fi
+
     mkdir -p /etc/grafana/provisioning/dashboards
-    
+
     cat <<EOF > /etc/grafana/provisioning/dashboards/dashboards.yaml
 apiVersion: 1
 providers:
