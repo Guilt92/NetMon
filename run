@@ -154,6 +154,7 @@ providers:
 EOF
 
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Dashboard added."
+    systemctl  restart grafana-server.service
 }
 
 uninstall() {
