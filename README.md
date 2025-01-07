@@ -24,12 +24,12 @@ curl -sSL https://github.com/Niihil/NetMon/raw/main/run | bash
 # Access the Monitoring Tools:
 
 - Grafana:
-    - URL: http://<your-server-ip>:3000
+    - URL: http://your-server-ip:3000
     - Default username: admin
     - Default password: admin
 
 - Prometheus:
-    - URL: http://<your-server-ip>:9090
+    - URL: http://your-server-ip:9090
 
 - Node Exporter Metrics:
-    - URL: http://<your-server-ip>:9100/metrics
+    - URL: http://your-server-ip:9100/metrics
