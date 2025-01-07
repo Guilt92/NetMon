@@ -124,10 +124,16 @@ configure_grafana() {
     
 add_dashboard() {
     echo -e "${BLUE}[INFO]${ENDCOLOR} ${PURPLE}Adding Dashboard to Grafana...${ENDCOLOR}"
-
     mkdir -p /var/lib/grafana/dashboards/
-    cp Dashboards-1.json /var/lib/grafana/dashboards/
-    cp Dashboards-2.json /var/lib/grafana/dashboards/
+    CURRENT_DIR=$(pwd)
+    echo "Current directory: $CURRENT_DIR"
+    if [ -f "$CURRENT_DIR/Dashboards-1.json" ] && [ -f "$CURRENT_DIR/Dashboards-2.json" ]; then
+        cp "$CURRENT_DIR/Dashboards-1.json" /var/lib/grafana/dashboards/
+        cp "$CURRENT_DIR/Dashboards-2.json" /var/lib/grafana/dashboards/
+    else
+        echo -e "${RED}[ERROR]${ENDCOLOR} Dashboard files not found in $CURRENT_DIR."
+        exit 1
+    fi
     mkdir -p /etc/grafana/provisioning/dashboards
     
     cat <<EOF > /etc/grafana/provisioning/dashboards/dashboards.yaml
