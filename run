@@ -128,8 +128,8 @@ add_dashboard() {
     mkdir -p /var/lib/grafana/dashboards/
     DEST_DIR="/var/lib/grafana/dashboards/"
     
-    FILE1_URL="https://raw.githubusercontent.com/Niihil/NetMon/main/Dashboards-1.json"
-    FILE2_URL="https://raw.githubusercontent.com/Niihil/NetMon/main/Dashboards-2.json"
+    FILE1_URL="https://raw.githubusercontent.com/Niihil/NetMon/refs/heads/main/Dashboards-1.json"
+    FILE2_URL="https://raw.githubusercontent.com/Niihil/NetMon/refs/heads/main/Dashboards-2.json"
     curl -fSL "$FILE1_URL" -o "$DEST_DIR/Dashboards-1.json" && \
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Dashboards-1.json downloaded." || \
     { echo -e "${RED}[ERROR]${ENDCOLOR} Failed to download Dashboards-1.json."; exit 1; }
