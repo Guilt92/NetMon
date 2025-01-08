@@ -110,16 +110,44 @@ configure_grafana() {
   
   PROMETHEUS_URL="http://$(hostname -I | awk '{print $1}'):9090"
   echo "Adding Prometheus data source at: $PROMETHEUS_URL"
+  
+  GRAFANA_ADMIN_USER="admin"
+  GRAFANA_ADMIN_PASS="admin"
+  AUTH="$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASS"
+ 
+  if curl -s -u "$AUTH" "$GRAFANA_URL/api/datasources" | grep -q '"name":"Prometheus"'; then
+    echo -e "${GREEN}[INFO]${ENDCOLOR} Prometheus Data Source already exists. Skipping creation."
+  else
+    echo -e "${BLUE}[INFO]${ENDCOLOR} Adding Prometheus Data Source to Grafana..."
 
-  curl -u $GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASS -X POST $GRAFANA_URL/api/datasources -H "Content-Type: application/json" -d '{
-    "name": "Prometheus",
-    "type": "prometheus",
-    "url": "'$PROMETHEUS_URL'",
-    "access": "proxy",
-    "isDefault": true
-  }'
 
-  echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Data Source added."
+  MAX_RETRIES=3
+  RETRY_COUNT=0
+  SUCCESS=false
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+    if curl -u "$AUTH" -X POST "$GRAFANA_URL/api/datasources" -H "Content-Type: application/json" -d '{
+      "name": "Prometheus",
+      "type": "prometheus",
+      "url": "'$PROMETHEUS_URL'",
+      "access": "proxy",
+      "isDefault": true
+    }'; then
+      echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Prometheus Data Source added."
+      SUCCESS=true
+      break
+    else
+      echo -e "${RED}[ERROR]${ENDCOLOR} Failed to add Prometheus Data Source. Retrying in 5 seconds..."
+      RETRY_COUNT=$((RETRY_COUNT + 1))
+      sleep 2 
+    fi
+  done
+  if [ "$SUCCESS" = false ]; then
+    echo -e "${RED}[ERROR]${ENDCOLOR} Unable to add Prometheus Data Source after $MAX_RETRIES attempts."
+    exit 1
+  fi
+fi
+
 }
     
 
