@@ -111,8 +111,6 @@ configure_grafana() {
   PROMETHEUS_URL="http://$(hostname -I | awk '{print $1}'):9090"
   echo "Adding Prometheus data source at: $PROMETHEUS_URL"
   
-  GRAFANA_ADMIN_USER="admin"
-  GRAFANA_ADMIN_PASS="admin"
   AUTH="$GRAFANA_ADMIN_USER:$GRAFANA_ADMIN_PASS"
  
   if curl -s -u "$AUTH" "$GRAFANA_URL/api/datasources" | grep -q '"name":"Prometheus"'; then
