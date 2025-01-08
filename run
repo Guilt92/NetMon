@@ -120,8 +120,7 @@ configure_grafana() {
   else
     echo -e "${BLUE}[INFO]${ENDCOLOR} Adding Prometheus Data Source to Grafana..."
 
-
-  MAX_RETRIES=3
+  MAX_RETRIES=5
   RETRY_COUNT=0
   SUCCESS=false
 
@@ -157,15 +156,9 @@ add_dashboard() {
     DEST_DIR="/var/lib/grafana/dashboards/"
     
     FILE1_URL="https://raw.githubusercontent.com/Niihil/NetMon/refs/heads/main/Dashboards-1.json"
-    FILE2_URL="https://raw.githubusercontent.com/Niihil/NetMon/refs/heads/main/Dashboards-2.json"
     curl -fSL "$FILE1_URL" -o "$DEST_DIR/Dashboards-1.json" && \
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Dashboards-1.json downloaded." || \
     { echo -e "${RED}[ERROR]${ENDCOLOR} Failed to download Dashboards-1.json."; exit 1; }
-
-    curl -fSL "$FILE2_URL" -o "$DEST_DIR/Dashboards-2.json" && \
-    echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Dashboards-2.json downloaded." || \
-    { echo -e "${RED}[ERROR]${ENDCOLOR} Failed to download Dashboards-2.json."; exit 1; }
-    
     chown  -R grafana. "$DEST_DIR"        
 
     mkdir -p /etc/grafana/provisioning/dashboards
@@ -210,12 +203,9 @@ uninstall() {
     rm -f /etc/apt/trusted.gpg.d/grafana.asc 2>/dev/null || true
 
     echo -e "${GREEN}[SUCCESS]${ENDCOLOR} Uninstallation complete. All components have been removed."
+    sleep 1 
+    clear
 }
-
-if [ "$(id -u)" -ne 0 ]; then
-    echo -e "${RED}[ERROR]${ENDCOLOR} Please run this script as root."
-    exit 1
-fi
 
 
 information(){
