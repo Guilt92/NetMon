@@ -16,7 +16,7 @@ This is a simple bash script for quickly setting up a server monitoring system u
 # Installation :
 
 ```
-curl -sSL https://github.com/Niihil/NetMon/raw/main/run | bash
+curl -sSL https://github.com/Niihil/NetMon/raw/main/run -o /tmp/run.sh && bash /tmp/run.sh
 
 ```
 
