@@ -27,8 +27,8 @@ sleep 1;
 
 INSTALL_DIR="/opt/monitoring"
 DASHBOARD_JSON="dashboard.json"
-GRAFANA_ADMIN_USER="admin"
-GRAFANA_ADMIN_PASS="admin"
+GRAFANA_ADMIN_USER="netmon"
+GRAFANA_ADMIN_PASS="niihil"
 
 fetch_versions() {
     PROMETHEUS_VERSION=$(curl -s https://github.com/prometheus/prometheus/releases | grep -oP 'v\d+\.\d+\.\d+' | head -n 1 | sed 's/^v//')
