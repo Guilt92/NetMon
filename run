@@ -232,7 +232,7 @@ while true; do
     clear
     echo -e "${BLUE}\e[5m╔═══════════════════════════════════════════════════════════╗${ENDCOLOR}"
     echo -e "                    ${GREEN}🔥 Network Monitoring 🔥${ENDCOLOR}"
-    echo -e "              ${CYAN} https://github.com/Niihil/NetMon.git  ${ENDCOLOR}"
+    echo -e "              ${CYAN} https://github.com/Guilt92/NetMon.git  ${ENDCOLOR}"
     echo -e "${BLUE}\e[5m╚═══════════════════════════════════════════════════════════╝${ENDCOLOR}"
     echo -e "${RED}============================ ${ENDCOLOR}"
     echo -e "${RED}1. ${ENDCOLOR} Install ${ENDCOLOR}"
