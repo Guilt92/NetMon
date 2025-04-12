@@ -31,9 +31,10 @@ GRAFANA_ADMIN_USER="netmon"
 GRAFANA_ADMIN_PASS="niihil"
 
 fetch_versions() {
-    PROMETHEUS_VERSION=$(curl -s https://github.com/prometheus/prometheus/releases | grep -oP 'v\d+\.\d+\.\d+' | head -n 1 | sed 's/^v//')
+    PROMETHEUS_VERSION=$(curl -s https://github.com/prometheus/prometheus/releases | grep -oP 'v\d+\.\d+\.\d+(?=")' | grep -vE 'rc|beta|alpha' | head -n 1 | sed 's/^v//')
     NODE_EXPORTER_VERSION=$(curl -s https://github.com/prometheus/node_exporter/releases | grep -oP 'v\d+\.\d+\.\d+' | head -n 1 | sed 's/^v//' )
-    GRAFANA_VERSION=$(curl -s https://api.github.com/repos/grafana/grafana/releases/latest | jq -r .tag_name | sed 's/^v//')
+    GRAFANA_VERSION=$(curl -s https://github.com/grafana/grafana/releases | grep -oP 'href="/grafana/grafana/releases/tag/v\d+\.\d+\.\d+"' | grep -vE 'rc|beta|alpha' | head -n 1 | grep -oP '\d+\.\d+\.\d+')
+
 
     if [[ -z $PROMETHEUS_VERSION || -z $NODE_EXPORTER_VERSION || -z $GRAFANA_VERSION ]]; then
         echo -e "${RED}[ERROR]${ENDCOLOR} Failed to fetch versions. Please check your internet connection."
